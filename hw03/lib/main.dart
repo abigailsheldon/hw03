@@ -147,9 +147,55 @@ class GameScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final gameProvider = Provider.of<GameProvider>(context);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Card Matching Game'),
+        actions: [
+          // Restart button to restart the game
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () {
+              gameProvider.restartGame();
+            },
+          )
+        ],
+      ),
+      body: Column(
+        children: [
+          // Display timer and score
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                Text('Time: ${gameProvider.timeElapsed} sec'),
+                Text('Score: ${gameProvider.score}'),
+              ],
+            ),
+          ),
+          // Grid expanded to fill screen
+          Expanded(
+            // Grid of cards
+            child: GridView.builder(
+              padding: const EdgeInsets.all(16.0),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 4,
+                crossAxisSpacing: 8,
+                mainAxisSpacing: 8,
+              ),
+              itemCount: gameProvider.cards.length,
+              itemBuilder: (context, index) {
+                return CardWidget(index: index);
+              },
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
-
 
 /* Represents each individual card */
 class CardWidget extends StatelessWidget {
