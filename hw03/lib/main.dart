@@ -163,12 +163,52 @@ class MyApp extends StatelessWidget {
 }
 
 /* Main screen */
-class GameScreen extends StatelessWidget {
+class GameScreen extends StatefulWidget {
   const GameScreen({super.key});
+
+  @override
+  _GameScreenState createState() => _GameScreenState();
+}
+
+class _GameScreenState extends State<GameScreen> {
+  // Win dialog shown only once per game
+  bool _hasShownWinDialog = false;
 
   @override
   Widget build(BuildContext context) {
     final gameProvider = Provider.of<GameProvider>(context);
+
+    // Check win condition
+    if (!_hasShownWinDialog &&
+        gameProvider.cards.isNotEmpty &&
+        gameProvider.cards.every((card) => card.isMatched)) {
+
+      _hasShownWinDialog = true;
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: const Text('Yay! You won!'),
+            content: const Text('Great job matching all the cards!'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  // Optionally restart the game
+                  gameProvider.restartGame();
+                  setState(() {
+                    _hasShownWinDialog = false;
+                  });
+                },
+                child: const Text('Play Again'),
+              ),
+            ],
+          ),
+          barrierDismissible: false,
+        );
+      });
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -179,6 +219,9 @@ class GameScreen extends StatelessWidget {
             icon: const Icon(Icons.refresh),
             onPressed: () {
               gameProvider.restartGame();
+              setState(() {
+                _hasShownWinDialog = false;
+              });
             },
           )
         ],
