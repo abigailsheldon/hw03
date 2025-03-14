@@ -19,6 +19,8 @@ class GameProvider extends ChangeNotifier {
   int _timeElapsed = 0;
   // Game score
   int _score = 0;
+  // Flag to block taps while processing match check
+  bool _isProcessing = false;
 
   /* For UI access */
   List<CardModel> get cards => _cards;
@@ -60,6 +62,7 @@ class GameProvider extends ChangeNotifier {
     // Reset timer and score
     _timeElapsed = 0;
     _score = 0;
+    _isProcessing = false;
 
     _startTimer();
     notifyListeners();
@@ -81,6 +84,9 @@ class GameProvider extends ChangeNotifier {
 
   /* Flips card at provided index */
   void flipCard(int index) {
+    // If a match check is already in progress, ignore new taps
+    if (_isProcessing) return;
+    
     // No tapping face-up or matched card
     if (_cards[index].isFaceUp || _cards[index].isMatched) return;
 
@@ -91,8 +97,10 @@ class GameProvider extends ChangeNotifier {
 
     // If two cards selected, check match
     if (_selectedIndices.length == 2) {
+      _isProcessing = true;
       Future.delayed(Duration(milliseconds: 800), () {
         _checkForMatch();
+        _isProcessing = false;
       });
     }
   }
