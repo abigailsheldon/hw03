@@ -1,6 +1,62 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:provider/provider.dart';
+import 'card_model.dart';
+
+class GameProvider extends ChangeNotifier {
+  List<CardModel> _cards = [];
+  List<int> _selectedIndices = [];
+  Timer? _timer;
+  int _timeElapsed = 0;
+  int _score = 0;
+
+  List<CardModel> get cards => _cards;
+  int get timeElapsed => _timeElapsed;
+  int get score => _score;
+
+  GameProvider() {
+    _initializeGame();
+  }
+
+  void _initializeGame() {
+    List<String> contents = List.generate(8, (index) => 'Item $index');
+    List<String> pairedContents = List.from(contents)..addAll(contents);
+    pairedContents.shuffle();
+
+    _cards = pairedContents
+        .asMap()
+        .entries
+        .map((entry) => CardModel(id: entry.key, content: entry.value))
+        .toList();
+
+    _selectedIndices = [];
+    _timeElapsed = 0;
+    _score = 0;
+
+    _startTimer();
+    notifyListeners();
+  }
+
+  void _startTimer() {
+    _timer?.cancel();
+    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+      _timeElapsed++;
+      notifyListeners();
+    });
+  }
+
+  void stopTimer() {
+    _timer?.cancel();
+  }
+
+  void flipCard(int index) {
+    //
+  }
+
+  void _checkIfMatch() {
+  }
+  
+}
 
 void main() {
   runApp(const MyApp());
