@@ -25,16 +25,28 @@ class GameProvider extends ChangeNotifier {
   int get timeElapsed => _timeElapsed;
   int get score => _score;
 
-\  GameProvider() {
+  GameProvider() {
     _initializeGame();
   }
 
   /* Creates pairs of cards, shuffles, resets timer and score */
   void _initializeGame() {
-    // Example: Create 8 pairs for a 4x4 grid
-    List<String> contents = List.generate(8, (index) => 'Item $index');
+    // Create 8 pairs for a 4x4 grid
+    //List<String> contents = List.generate(8, (index) => 'Item $index');
+    
+    List<String> imagePaths = [
+      'lib/assets/images/dog1.png',
+      'lib/assets/images/dog2.png',
+      'lib/assets/images/dog3.png',
+      'lib/assets/images/dog4.png',
+      'lib/assets/images/dog5.png',
+      'lib/assets/images/dog6.png',
+      'lib/assets/images/dog7.png',
+      'lib/assets/images/dog8.png',
+    ];
+    
     // Duplicate each item for a pair
-    List<String> pairedContents = List.from(contents)..addAll(contents);
+    List<String> pairedContents = List.from(imagePaths)..addAll(imagePaths);
     pairedContents.shuffle();
 
     _cards = pairedContents
@@ -119,6 +131,7 @@ class GameProvider extends ChangeNotifier {
     _initializeGame();
   }
 }
+
 void main() {
   runApp(
     ChangeNotifierProvider(
@@ -199,7 +212,68 @@ class GameScreen extends StatelessWidget {
 
 /* Represents each individual card */
 class CardWidget extends StatelessWidget {
-  final int index; // Index of the card in the list
+  final int index; 
   const CardWidget({super.key, required this.index});
 
+  // Helper function to get number for card
+  String _extractNumber(String assetPath) {
+    final RegExp regex = RegExp(r'\d+');
+    final match = regex.firstMatch(assetPath);
+    return match?.group(0) ?? '';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final gameProvider = Provider.of<GameProvider>(context);
+    final card = gameProvider.cards[index];
+
+    return GestureDetector(
+      // On tap (card), call flipCard
+      onTap: () => gameProvider.flipCard(index),
+      child: AnimatedContainer(
+        // For flip animation
+        duration: const Duration(milliseconds: 300), 
+        curve: Curves.easeInOut, 
+        decoration: BoxDecoration(
+          // When the card is face-up or matched, no background color is applied
+          color: card.isFaceUp || card.isMatched ? Colors.transparent : Colors.grey,
+          borderRadius: BorderRadius.circular(8.0),
+          border: Border.all(color: Colors.black),
+        ),
+        alignment: Alignment.center,
+        child: card.isFaceUp || card.isMatched
+            ? Stack(
+                children: [
+                  // Image as card background
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8.0),
+                    child: Image.asset(
+                      card.content,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      height: double.infinity,
+                    ),
+                  ),
+                  // Overlay number
+                  Center(
+                    child: Container(
+                      padding: const EdgeInsets.all(4.0),
+                      color: Colors.black54,
+                      child: Text(
+                        _extractNumber(card.content),
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            // When face-down, empty widget (grey bg)
+            : const SizedBox.shrink(),
+      ),
+    );
+  }
 }
