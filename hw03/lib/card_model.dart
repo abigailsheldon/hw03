@@ -1,13 +1,18 @@
+/*
+* Defines properties for each card
+*/
 class CardModel {
   final int id;
-  final String content; // Could be an image path or any identifier
+  final String content; 
   bool isFaceUp;
   bool isMatched;
 
   CardModel({
     required this.id,
     required this.content,
+    // If card face-up
     this.isFaceUp = false,
+    // If card has been matched in a pair
     this.isMatched = false,
   });
 }

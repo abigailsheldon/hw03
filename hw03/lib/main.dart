@@ -3,23 +3,37 @@ import 'dart:async';
 import 'package:provider/provider.dart';
 import 'card_model.dart';
 
+/*
+* Manages card list, timer, score, game logic.
+* - Creates and shuffles cards.
+* - Handles card flip/match logic.
+* - Manages timer and game score.
+* - Notifies listeners when change occurs.
+*/
 class GameProvider extends ChangeNotifier {
+  // List to store all cards
   List<CardModel> _cards = [];
+  // List to store indicies of current cards
   List<int> _selectedIndices = [];
   Timer? _timer;
   int _timeElapsed = 0;
+  // Game score
   int _score = 0;
 
+  // For UI access
   List<CardModel> get cards => _cards;
   int get timeElapsed => _timeElapsed;
   int get score => _score;
 
+  // Constructor
   GameProvider() {
     _initializeGame();
   }
 
   void _initializeGame() {
+    // Example: Create 8 pairs for a 4x4 grid
     List<String> contents = List.generate(8, (index) => 'Item $index');
+    // Duplicate each item for a pair
     List<String> pairedContents = List.from(contents)..addAll(contents);
     pairedContents.shuffle();
 
@@ -50,83 +64,48 @@ class GameProvider extends ChangeNotifier {
   }
 
   void flipCard(int index) {
-    //
+    // Prevent tapping an already face-up or matched card
+    if (_cards[index].isFaceUp || _cards[index].isMatched) return;
+
+    _cards[index].isFaceUp = true;
+    _selectedIndices.add(index);
+    notifyListeners();
+
+    if (_selectedIndices.length == 2) {
+      Future.delayed(Duration(milliseconds: 800), () {
+        _checkForMatch();
+      });
+    }
   }
 
-  void _checkIfMatch() {
-  }
-  
-}
+  void _checkForMatch() {
+    int firstIndex = _selectedIndices[0];
+    int secondIndex = _selectedIndices[1];
 
-void main() {
-  runApp(const MyApp());
-}
+    if (_cards[firstIndex].content == _cards[secondIndex].content) {
+      // Match found
+      _cards[firstIndex].isMatched = true;
+      _cards[secondIndex].isMatched = true;
+      _score += 10; // Award points for matching
+    } else {
+      // Mismatch: flip back
+      _cards[firstIndex].isFaceUp = false;
+      _cards[secondIndex].isFaceUp = false;
+      _score -= 2; // Deduct points for mismatch
+    }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+    _selectedIndices.clear();
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        
-        
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      
-      _counter++;
-    });
+    // Check if game is won
+    if (_cards.every((card) => card.isMatched)) {
+      stopTimer();
+      // Optionally show a victory message here (via dialog, snackbar, etc.)
+    }
+    notifyListeners();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
-      body: Center(
-        
-        child: Column(
-          
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), 
-    );
+  void restartGame() {
+    stopTimer();
+    _initializeGame();
   }
 }
